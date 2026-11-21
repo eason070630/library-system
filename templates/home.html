@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard · Library System{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <div><h1 class="h3 page-title mb-0">Dashboard</h1><div class="text-muted">Member Information &amp; Book Categories at a glance</div></div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="{% url 'members:register' %}"><i class="bi bi-person-plus me-1"></i>Register Member</a>
+    <a class="btn btn-outline-primary" href="{% url 'categories:add' %}"><i class="bi bi-tag me-1"></i>Add Category</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3">
+    <div class="icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></div>
+    <div><div class="text-muted small">Total members</div><div class="fs-3 fw-bold">{{ total_members }}</div></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3">
+    <div class="icon bg-success-subtle text-success"><i class="bi bi-person-check"></i></div>
+    <div><div class="text-muted small">Active / Inactive</div><div class="fs-3 fw-bold">{{ active_members }} <span class="fs-6 text-muted">/ {{ inactive_members }}</span></div></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3">
+    <div class="icon bg-warning-subtle text-warning"><i class="bi bi-tags"></i></div>
+    <div><div class="text-muted small">Categories</div><div class="fs-3 fw-bold">{{ total_categories }}</div></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card stat-card"><div class="card-body d-flex align-items-center gap-3">
+    <div class="icon bg-info-subtle text-info"><i class="bi bi-book"></i></div>
+    <div><div class="text-muted small">Books <span class="text-muted">({{ uncategorised }} uncategorised)</span></div><div class="fs-3 fw-bold">{{ total_books }}</div></div></div></div></div>
+</div>
+
+<h2 class="h5 page-title mb-3">Membership tiers</h2>
+<div class="row g-3 mb-4">
+  {% for t in tiers %}
+  <div class="col-md-4"><div class="card tier-card t-{{ t.badge_color }} h-100"><div class="card-body">
+    <div class="d-flex justify-content-between align-items-start">
+      <span class="badge text-bg-{{ t.badge_color }} fs-6"><i class="bi bi-award me-1"></i>{{ t.name }}</span>
+      <span class="fw-bold fs-4">{{ t.n }}</span>
+    </div>
+    <p class="mt-3 mb-2"><i class="bi bi-journals me-1"></i><strong>{{ t.max_books }}</strong> books at a time<br>
+      <i class="bi bi-calendar-check me-1"></i><strong>{{ t.loan_days }}</strong> days per loan</p>
+    <div class="progress" role="progressbar"><div class="progress-bar bg-{{ t.badge_color }}" style="width: {{ t.percent }}%"></div></div>
+    <div class="small text-muted mt-1">{{ t.percent }}% of members</div>
+    <a class="stretched-link" href="{% url 'members:list' %}?tier={{ t.pk }}" title="View {{ t.name }} members"></a>
+  </div></div></div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card h-100"><div class="card-body">
+    <h2 class="h5 page-title mb-3">Recent members</h2>
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Name</th><th>Tier</th><th>Status</th></tr></thead>
+      {% for m in recent_members %}
+      <tr><td>{{ m.name }}<div class="small text-muted">{{ m.email }}</div></td>
+        <td><span class="badge text-bg-{{ m.membership_type.badge_color }}">{{ m.membership_type.name }}</span></td>
+        <td><span class="badge {% if m.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ m.get_status_display }}</span></td></tr>
+      {% empty %}<tr><td colspan="3" class="text-muted">No members yet.</td></tr>{% endfor %}
+    </table>
+  </div></div></div>
+  <div class="col-lg-5"><div class="card h-100"><div class="card-body">
+    <h2 class="h5 page-title mb-3">Books per category</h2>
+    {% for c in categories %}
+    <a class="text-decoration-none text-body d-block mb-3" href="{% url 'categories:books' c.pk %}">
+      <div class="d-flex justify-content-between small"><span>{{ c.name }}</span><span class="fw-semibold">{{ c.n }}</span></div>
+      <div class="progress"><div class="progress-bar" style="width: {{ c.percent }}%"></div></div>
+    </a>
+    {% empty %}<div class="text-muted">No categories yet.</div>{% endfor %}
+  </div></div></div>
+</div>
+
+<hr class="my-5">
+<div class="mb-4">
+  <h2 class="h3 page-title mb-1">Student 3 · Management Analytics</h2>
+  <p class="text-muted mb-0">Live overview of appointment operations and library administration.</p>
+</div>
+
+{% if can_view_appointment_dashboard %}
+<section class="mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="h5 page-title mb-0"><i class="bi bi-calendar2-check me-2"></i>Appointment Record</h3>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'appointments:upcoming' %}">Manage appointments <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Total appointments</div><div class="display-6 fw-bold">{{ appointment_total }}</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Upcoming</div><div class="display-6 fw-bold text-primary">{{ appointment_upcoming }}</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Booked</div><div class="display-6 fw-bold text-success">{{ appointment_booked }}</div></div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Cancelled</div><div class="display-6 fw-bold text-secondary">{{ appointment_cancelled }}</div></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-lg-7"><div class="card h-100"><div class="card-body"><h4 class="h6">Appointments in the last 7 days</h4><div style="height:260px"><canvas id="appointmentTrendChart" aria-label="Appointments in the last seven days"></canvas></div></div></div></div>
+    <div class="col-lg-5"><div class="card h-100"><div class="card-body"><h4 class="h6">Recently created appointments</h4>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Member</th><th>Date</th><th>Status</th></tr></thead><tbody>
+      {% for a in recent_appointments %}<tr><td>{{ a.member.name }}</td><td>{{ a.slot.date|date:"d M Y" }}</td><td><span class="badge {% if a.status == 'booked' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ a.get_status_display }}</span></td></tr>
+      {% empty %}<tr><td colspan="3" class="text-muted">No appointment records yet.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </div></div></div>
+  </div>
+</section>
+{% endif %}
+
+{% if can_view_account_dashboard %}
+<section class="mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="h5 page-title mb-0"><i class="bi bi-shield-lock me-2"></i>Library Admin &amp; User Accounts</h3>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:account_list' %}">Manage accounts <i class="bi bi-arrow-right"></i></a>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-xl-4"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Total users</div><div class="display-6 fw-bold">{{ account_total }}</div></div></div></div>
+    <div class="col-6 col-xl-4"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Active users</div><div class="display-6 fw-bold text-success">{{ account_active }}</div></div></div></div>
+    <div class="col-6 col-xl-4"><div class="card stat-card h-100"><div class="card-body"><div class="text-muted small">Inactive users</div><div class="display-6 fw-bold text-secondary">{{ account_inactive }}</div></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-lg-5"><div class="card h-100"><div class="card-body"><h4 class="h6">User distribution by role</h4><div style="height:260px"><canvas id="roleDistributionChart" aria-label="User distribution by role"></canvas></div></div></div></div>
+    {% if recent_admin_activities %}<div class="col-lg-7"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between align-items-center mb-2"><h4 class="h6 mb-0">Recent admin activities</h4><a class="small" href="{% url 'accounts:audit_log' %}">View audit log</a></div>
+      <div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Target</th></tr></thead><tbody>
+      {% for item in recent_admin_activities %}<tr><td class="text-nowrap">{{ item.timestamp|date:"d M H:i" }}</td><td>{{ item.username }}</td><td><span class="badge text-bg-light">{{ item.action }}</span></td><td>{{ item.target|default:"—"|truncatechars:35 }}</td></tr>{% endfor %}
+      </tbody></table></div>
+    </div></div></div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+{{ appointment_week_labels|json_script:"appointment-week-labels" }}
+{{ appointment_week_values|json_script:"appointment-week-values" }}
+{{ role_labels|json_script:"role-labels" }}
+{{ role_values|json_script:"role-values" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const readJson = (id) => { const el = document.getElementById(id); return el ? JSON.parse(el.textContent) : []; };
+  const trend = document.getElementById('appointmentTrendChart');
+  if (trend && window.Chart) new Chart(trend, {
+    type: 'bar',
+    data: { labels: readJson('appointment-week-labels'), datasets: [{ label: 'Appointments', data: readJson('appointment-week-values'), borderWidth: 1, borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+  });
+  const roles = document.getElementById('roleDistributionChart');
+  if (roles && window.Chart) new Chart(roles, {
+    type: 'doughnut',
+    data: { labels: readJson('role-labels'), datasets: [{ label: 'Users', data: readJson('role-values'), borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+</script>
+
+{% endblock %}

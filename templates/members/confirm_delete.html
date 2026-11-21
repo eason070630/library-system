@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Delete Member{% endblock %}
+{% block content %}
+<h1 class="h3 page-title mb-3">Delete Member</h1>
+<div class="card form-card border-danger"><div class="card-body">
+  <form method="post">
+    {% csrf_token %}
+    <p class="mb-3"><i class="bi bi-exclamation-triangle text-danger me-1"></i>Permanently delete <strong>{{ member.name }}</strong> ({{ member.email }})? This cannot be undone.</p>
+    <button class="btn btn-danger" type="submit"><i class="bi bi-trash me-1"></i>Yes, delete</button>
+    <a class="btn btn-outline-secondary" href="{% url 'members:list' %}">Cancel</a>
+  </form>
+</div></div>
+{% endblock %}

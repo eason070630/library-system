@@ -1,0 +1,61 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Browse Books · Library System{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-2">Browse Books</h2>
+    <p class="text-muted">Explore our library collection.</p>
+
+    <div class="row g-4">
+
+        {% for book in books %}
+
+        <div class="col-md-4 col-lg-3">
+
+            <div class="card h-100 shadow-sm">
+
+                {% if book.cover %}
+                    <img src="{{ book.cover.url }}"
+                         class="card-img-top"
+                         alt="{{ book.title }}"
+                         style="height: 240px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center"
+                         style="height: 240px;">
+                        <span class="text-muted">No Cover Available</span>
+                    </div>
+                {% endif %}
+
+                <div class="card-body">
+
+                    <h5 class="card-title">{{ book.title }}</h5>
+
+                    <p class="card-text">
+                        <strong>Author:</strong> {{ book.author|default:"Not specified" }}<br>
+                        <strong>ISBN:</strong> {{ book.isbn|default:"Not specified" }}<br>
+                        <strong>Category:</strong> {{ book.category|default:"Uncategorised" }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12">
+            <p>No books available yet.</p>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,72 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>My Appointments</h2>
+    <p>View your appointment records here.</p>
+
+    <div class="mb-3">
+        <a href="?show=upcoming"
+           class="btn btn-outline-primary">Upcoming</a>
+
+        <a href="?show=past"
+           class="btn btn-outline-secondary">Past</a>
+
+        <a href="?show=cancelled"
+           class="btn btn-outline-danger">Cancelled</a>
+
+        <a href="?show=all"
+           class="btn btn-outline-dark">All</a>
+    </div>
+
+    {% for appointment in appointments %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    {{ appointment.get_purpose_display }}
+                </h5>
+
+                <p>
+                    <strong>Date:</strong>
+                    {{ appointment.slot.date|date:"d M Y" }}
+                </p>
+
+                <p>
+                    <strong>Time:</strong>
+                    {{ appointment.slot.start_time|time:"H:i" }}
+                    -
+                    {{ appointment.slot.end_time|time:"H:i" }}
+                </p>
+
+                <p>
+                    <strong>Book:</strong>
+                    {% if appointment.book %}
+                        {{ appointment.book.title }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    {{ appointment.get_status_display }}
+                </p>
+                {% if appointment.status == 'booked' and not appointment.slot.has_started %}
+    <a href="{% url 'appointments:cancel' appointment.pk %}"
+       class="btn btn-danger btn-sm">
+        Cancel Appointment
+    </a>
+{% endif %}
+                {% if appointment.note %}
+                    <p><strong>Note:</strong> {{ appointment.note }}</p>
+                {% endif %}
+            </div>
+        </div>
+    {% empty %}
+        <div class="alert alert-info">
+            You do not have any appointments in this section.
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

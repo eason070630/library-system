@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Schedule Reservation{% endblock %}
+{% block content %}
+<h1 class="h3 page-title mb-3"><i class="bi bi-calendar-plus me-2"></i>Schedule Reservation</h1>
+<div class="card form-card"><div class="card-body">
+  <div class="alert alert-info small"><i class="bi bi-info-circle me-1"></i>Each member can hold a limited number of upcoming appointments depending on the membership tier: Basic 2, Silver 3, Gold 4.</div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include 'includes/form_fields.html' %}
+    <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Schedule</button>
+  <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+    Cancel
+</a>  </form>
+</div></div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Audit Log · Library System{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 page-title mb-0"><i class="bi bi-journal-text me-2"></i>System Audit Log</h1>
+  <a class="btn btn-outline-secondary" href="?{{ qs }}{% if qs %}&{% endif %}export=csv"><i class="bi bi-download me-1"></i>Export CSV</a>
+</div>
+<div class="card mb-3"><div class="card-body">
+  <form method="get" class="row g-2">
+    <div class="col-md-3"><input class="form-control" name="q" value="{{ q }}" placeholder="Search target or detail"></div>
+    <div class="col-6 col-md-2"><input class="form-control" name="user" value="{{ user_q }}" placeholder="User"></div>
+    <div class="col-6 col-md-2"><select class="form-select" name="action"><option value="">All actions</option>
+      {% for a in actions %}<option value="{{ a }}" {% if action == a %}selected{% endif %}>{{ a }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-2"><input class="form-control" type="date" name="from" value="{{ d_from }}" title="From date"></div>
+    <div class="col-6 col-md-2"><input class="form-control" type="date" name="to" value="{{ d_to }}" title="To date"></div>
+    <div class="col-12 col-md-1 d-grid"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-funnel"></i></button></div>
+  </form>
+</div></div>
+<div class="card"><div class="table-responsive"><table class="table table-hover table-sm mb-0">
+  <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
+  {% for l in page %}
+  <tr><td class="text-nowrap small">{{ l.timestamp|date:"d M Y H:i:s" }}</td><td>{{ l.username }}</td>
+    <td><span class="badge {% if l.action == 'delete' or l.action == 'login_failed' %}text-bg-danger{% elif l.action == 'create' %}text-bg-success{% elif l.action == 'update' %}text-bg-primary{% elif l.action == 'login' or l.action == 'logout' %}text-bg-secondary{% else %}text-bg-warning{% endif %}">{{ l.action }}</span></td>
+    <td>{{ l.target }}</td><td class="small text-muted">{{ l.detail|truncatechars:140 }}</td><td class="small">{{ l.ip|default:"-" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="text-center text-muted py-4">No log entries match.</td></tr>{% endfor %}
+</table></div></div>
+{% if page.paginator.num_pages > 1 %}
+<nav class="mt-3"><ul class="pagination justify-content-center mb-0">
+  {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ qs }}{% if qs %}&{% endif %}page={{ page.previous_page_number }}">Previous</a></li>
+  {% else %}<li class="page-item disabled"><span class="page-link">Previous</span></li>{% endif %}
+  <li class="page-item disabled"><span class="page-link">Page {{ page.number }} of {{ page.paginator.num_pages }}</span></li>
+  {% if page.has_next %}<li class="page-item"><a class="page-link" href="?{{ qs }}{% if qs %}&{% endif %}page={{ page.next_page_number }}">Next</a></li>
+  {% else %}<li class="page-item disabled"><span class="page-link">Next</span></li>{% endif %}
+</ul></nav>
+{% endif %}
+{% endblock %}

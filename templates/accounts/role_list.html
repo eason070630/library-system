@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Roles · Library System{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 page-title mb-0"><i class="bi bi-key me-2"></i>Roles &amp; Permissions</h1>
+  <a class="btn btn-primary" href="{% url 'accounts:role_create' %}"><i class="bi bi-plus-lg me-1"></i>Create Role</a>
+</div>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Role</th><th>Description</th><th>Accounts</th><th>Permissions</th><th class="text-end">Actions</th></tr></thead>
+  {% for r in roles %}
+  <tr><td class="fw-semibold">{{ r.name }}</td><td class="text-muted">{{ r.description|default:"-" }}</td>
+    <td><span class="badge text-bg-primary rounded-pill">{{ r.user_count }}</span></td>
+    <td><span class="badge text-bg-info rounded-pill">{{ r.right_count }}</span></td>
+    <td class="text-end"><div class="d-inline-flex gap-1">
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'accounts:role_edit' r.pk %}"><i class="bi bi-sliders"></i> Manage permissions</a>
+      {% if r.name != protected %}<a class="btn btn-sm btn-outline-danger" href="{% url 'accounts:role_delete' r.pk %}"><i class="bi bi-trash"></i> Delete</a>{% endif %}
+    </div></td></tr>
+  {% endfor %}
+</table></div></div>
+{% endblock %}

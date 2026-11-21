@@ -1,0 +1,94 @@
+
+{% extends 'base.html' %}
+
+{% block title %}My Profile · Library System{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2>My Profile</h2>
+            <p class="text-muted">View and update your personal information.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if member %}
+
+        <div class="card shadow-sm mt-3">
+            <div class="card-body">
+
+                <h4 class="mb-3">Edit Profile</h4>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        {{ form.username }}
+                        {% for error in form.username.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                        {% for error in form.email.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Membership Type</label>
+                        {{ form.membership_type }}
+                        {% for error in form.membership_type.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        Save Changes
+                    </button>
+
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                        Back to Home
+                    </a>
+
+                </form>
+
+                <hr>
+
+                <p>
+                    <strong>Member Status:</strong>
+                    {{ member.get_status_display }}
+                </p>
+
+                <p>
+                    <strong>Member Since:</strong>
+                    {{ member.join_date }}
+                </p>
+
+            </div>
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-warning">
+            Your account is not linked to a library member profile.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

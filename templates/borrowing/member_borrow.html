@@ -1,0 +1,256 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Borrow a Book · Library System{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h1>Borrow a Book</h1>
+    <p>Select a book and submit your borrowing request.</p>
+
+    <div class="alert alert-info">
+        Borrowing limit: {{ member.max_books }} book(s)<br>
+        Active loans: {{ member.active_loan_count }}<br>
+        Remaining quota: {{ member.remaining_quota }}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            {{ form.errors }}
+        </div>
+    {% endif %}
+<!-- Category Filter and Search -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <label for="borrowCategory" class="form-label">
+            Select Category
+        </label>
+
+        <select id="borrowCategory" class="form-select">
+            <option value="all">All Categories</option>
+
+            {% for category in categories %}
+                <option value="{{ category.id }}">
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+
+            <option value="uncategorized">Uncategorized</option>
+        </select>
+    </div>
+
+    <div class="col-md-6">
+        <label for="borrowSearch" class="form-label">
+            Search Book
+        </label>
+
+        <input
+            type="text"
+            id="borrowSearch"
+            class="form-control"
+            placeholder="Search by title, author or ISBN..."
+        >
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button
+            type="button"
+            id="borrowReset"
+            class="btn btn-outline-secondary w-100"
+        >
+            Reset
+        </button>
+    </div>
+</div>
+    <div class="row g-4">
+
+        {% for book in books %}
+<div
+    class="col-md-4 col-lg-3 borrow-book-item"
+    id="book-{{ book.id }}"
+    data-category="{{ book.category_id|default:'uncategorized' }}"
+    data-search="{{ book.title|lower }} {{ book.author|default:''|lower }} {{ book.isbn|default:''|lower }} {{ book.category.name|default:''|lower }}"
+>
+                <div class="card h-100 shadow-sm">
+
+                    {% if book.cover %}
+                        <img src="{{ book.cover.url }}"
+                             alt="{{ book.title }}"
+                             style="width:100%; height:220px; object-fit:contain;">
+                    {% elif book.cover_image %}
+                        <img src="{{ book.cover_image.url }}"
+                             alt="{{ book.title }}"
+                             style="width:100%; height:220px; object-fit:contain;">
+                    {% else %}
+                        <div style="height:220px; display:flex;
+                                    align-items:center; justify-content:center;
+                                    background:#eee;">
+                            <span>📚 No Cover Available</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="card-body">
+
+                        <h5 class="card-title">
+                            {{ book.title }}
+                        </h5>
+
+                        <p class="card-text">
+                            Author: {{ book.author }}<br>
+                            ISBN: {{ book.isbn }}<br>
+                            Category: {{ book.category|default:"Uncategorized" }}
+                        </p>
+
+                        {% if book.is_borrowed %}
+
+                            <span class="badge bg-danger">
+                                Currently Borrowed
+                            </span>
+
+                            <button class="btn btn-secondary w-100 mt-3"
+                                    type="button" disabled>
+                                Unavailable
+                            </button>
+
+                        {% else %}
+
+                            <span class="badge bg-success">
+                                Available
+                            </span>
+
+                            <form method="POST" class="mt-3">
+                                {% csrf_token %}
+
+                                <input type="hidden"
+                                       name="book"
+                                       value="{{ book.pk }}">
+
+                                <button type="submit"
+                                        class="btn btn-primary w-100">
+                                    Borrow This Book
+                                </button>
+                            </form>
+
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+
+        {% empty %}
+            <p>No books found.</p>
+        {% endfor %}
+
+    </div>
+
+    <div class="mt-4 mb-4">
+        <a href="{% url 'dashboard' %}"
+           class="btn btn-outline-secondary">
+            Back to Home
+        </a>
+
+        <a href="{% url 'borrowing:my_loans' %}"
+           class="btn btn-outline-primary">
+            My Loans & Requests
+        </a>
+    </div>
+
+</div>
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const categoryFilter = document.getElementById('borrowCategory');
+    const searchInput = document.getElementById('borrowSearch');
+    const resetButton = document.getElementById('borrowReset');
+
+    const bookItems = document.querySelectorAll('.borrow-book-item');
+
+    // Read URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const categoryFromUrl = params.get('category');
+    const selectedBookId = params.get('book');
+
+    // Automatically select category from URL
+    if (categoryFromUrl && categoryFilter) {
+        categoryFilter.value = categoryFromUrl;
+    }
+
+    function filterBooks() {
+
+        const selectedCategory = categoryFilter.value;
+        const searchText = searchInput.value.toLowerCase().trim();
+
+        bookItems.forEach(function (item) {
+
+            const category = item.dataset.category;
+            const searchData = item.dataset.search.toLowerCase();
+
+            const matchesCategory =
+                selectedCategory === 'all' ||
+                category === selectedCategory;
+
+            const matchesSearch =
+                searchData.includes(searchText);
+
+            item.style.display =
+                matchesCategory && matchesSearch ? '' : 'none';
+        });
+    }
+
+    // Category selection
+    categoryFilter.addEventListener('change', filterBooks);
+
+    // Search
+    searchInput.addEventListener('input', filterBooks);
+
+    // Reset
+    resetButton.addEventListener('click', function () {
+        categoryFilter.value = 'all';
+        searchInput.value = '';
+        filterBooks();
+    });
+
+    // Initial filtering
+    filterBooks();
+
+    // Scroll to selected book after filtering
+    if (selectedBookId) {
+
+        const targetBook = document.getElementById(
+            'book-' + selectedBookId
+        );
+
+        if (targetBook) {
+
+            setTimeout(function () {
+
+                targetBook.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                targetBook.style.outline = '3px solid #0d6efd';
+                targetBook.style.borderRadius = '10px';
+
+                setTimeout(function () {
+                    targetBook.style.outline = '';
+                }, 2500);
+
+            }, 300);
+        }
+    }
+
+});
+
+</script>
+{% endblock %}

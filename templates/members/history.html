@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Member History{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 page-title mb-0">Member History</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'members:list' %}"><i class="bi bi-arrow-left me-1"></i>Back</a>
+</div>
+<div class="card mb-3"><div class="card-body">
+  <div class="row g-3 align-items-center">
+    <div class="col-md-7">
+      <h2 class="h4 mb-1">{{ member.name }}
+        <span class="badge {% if member.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %} fs-6 align-middle">{{ member.get_status_display }}</span></h2>
+      <div class="text-muted"><i class="bi bi-envelope me-1"></i>{{ member.email }} · <i class="bi bi-telephone me-1"></i>{{ member.phone }}</div>
+      <div class="text-muted"><i class="bi bi-calendar3 me-1"></i>Joined {{ member.join_date }}{% if member.address %} · <i class="bi bi-geo-alt me-1"></i>{{ member.address }}{% endif %}</div>
+    </div>
+    <div class="col-md-5">
+      <div class="border rounded p-3 bg-light">
+        <span class="badge text-bg-{{ member.membership_type.badge_color }} fs-6"><i class="bi bi-award me-1"></i>{{ member.membership_type.name }}</span>
+        <div class="mt-2">Borrow limit: <strong>{{ member.max_books }}</strong> books · <strong>{{ member.loan_days }}</strong> days per loan</div>
+        <div class="progress mt-2"><div class="progress-bar" style="width: {% widthratio member.active_loan_count member.max_books 100 %}%"></div></div>
+        <div class="small text-muted mt-1">Borrowed {{ member.active_loan_count }} of {{ member.max_books }} · {{ member.remaining_quota }} left</div>
+      </div>
+    </div>
+  </div>
+</div></div>
+<div class="card"><div class="card-body">
+  <h2 class="h5 page-title mb-3">Borrowing history</h2>
+  {% if not borrowing_ready %}
+    <div class="alert alert-info mb-0"><i class="bi bi-info-circle me-1"></i>The Borrowing module is not connected yet, so no borrowing history is available.</div>
+  {% elif not loans %}
+    <div class="alert alert-info mb-0">No borrowing records for this member.</div>
+  {% else %}
+    <table class="table table-hover mb-0"><thead><tr><th>#</th><th>Record</th></tr></thead>
+      {% for loan in loans %}<tr><td>{{ loan.pk }}</td><td>{{ loan }}</td></tr>{% endfor %}
+    </table>
+  {% endif %}
+</div></div>
+{% endblock %}

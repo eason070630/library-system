@@ -1,0 +1,532 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Home · Library System{% endblock %}
+
+{% block content %}
+
+<div class="member-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="member-sidebar">
+        <h3>Member Menu</h3>
+
+        <a href="{% url 'dashboard' %}">🏠 Home</a>
+        <a href="{% url 'borrowing:member_borrow' %}">📖 Borrow a Book</a>
+        <a href="{% url 'appointments:schedule' %}">📅 Schedule Reservation</a>
+        <a href="{% url 'borrowing:my_loans' %}">📋 My Loans & Requests</a>
+        <a href="{% url 'members:profile' %}">👤 My Profile</a>
+
+        <a href="{% url 'appointments:my_appointments' %}">
+            <i class="bi bi-calendar-check"></i>
+            My Appointments
+        </a>
+
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="member-logout">
+                🚪 Logout
+            </button>
+        </form>
+    </aside>
+
+    <!-- RIGHT CONTENT -->
+    <main class="member-content">
+
+        <div class="home-welcome">
+            <h2>Welcome to CHEW Library!</h2>
+            <p>Explore our book collection below.</p>
+        </div>
+
+        <div class="book-section">
+
+            <div class="book-section-header">
+                <div>
+                    <h3>Featured Books</h3>
+                    <p>Discover your next favourite book.</p>
+                </div>
+
+                <span class="book-total">
+                    {{ total_books }} Books
+                </span>
+            </div>
+
+            <!-- CATEGORY AND SEARCH -->
+            <div class="home-book-filters">
+
+                <div class="filter-field">
+                    <label for="homeCategory">Category</label>
+
+                    <select id="homeCategory" class="form-select">
+                        <option value="all">All Categories</option>
+
+                        {% for section in category_sections %}
+                            <option value="{{ section.category.id }}">
+                                {{ section.category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label for="homeSearch">Search Book</label>
+
+                    <input
+                        type="text"
+                        id="homeSearch"
+                        class="form-control"
+                        placeholder="Search title, author or ISBN..."
+                    >
+                </div>
+
+                <button
+                    type="button"
+                    id="homeReset"
+                    class="btn btn-outline-secondary">
+                    Reset
+                </button>
+
+            </div>
+
+            <p id="homeResultCount" class="text-muted small mt-2"></p>
+
+            <!-- CATEGORY BOOK SECTIONS -->
+            <div id="homeBookGrid">
+
+                {% for section in category_sections %}
+
+                    <section class="home-category-section"
+                             data-section-category="{{ section.category.id }}">
+
+                        <div class="home-category-header">
+                            <h4>{{ section.category.name }}</h4>
+
+                            <a href="{% url 'borrowing:member_borrow' %}?category={{ section.category.id }}"
+                               class="home-view-all">
+                                View All →
+                            </a>
+                        </div>
+
+                        <div class="home-books-grid">
+
+                            {% for book in section.books %}
+
+                                <div
+                                    class="home-book-card"
+                                    data-category="{{ book.category_id|default:'uncategorized' }}"
+                                    data-search="{{ book.title|lower }} {{ book.author|default:''|lower }} {{ book.isbn|default:''|lower }} {{ book.category.name|default:''|lower }}"
+                                >
+
+                                    {% if book.active_loan_count == 0 %}
+                                        <a href="{% url 'borrowing:member_borrow' %}?book={{ book.id }}#book-{{ book.id }}"
+                                            class="home-book-link">
+                                    {% else %}
+                                        <div class="home-book-link">
+                                    {% endif %}
+
+                                        <!-- BOOK COVER -->
+                                        <div class="home-book-cover">
+
+                                            {% if book.cover %}
+                                                <img src="{{ book.cover.url }}"
+                                                     alt="{{ book.title }}">
+                                            {% elif book.cover_image %}
+                                                <img src="{{ book.cover_image.url }}"
+                                                     alt="{{ book.title }}">
+                                            {% else %}
+                                                <div class="home-no-cover">
+                                                    📚
+                                                    <span>No Cover</span>
+                                                </div>
+                                            {% endif %}
+
+                                        </div>
+
+                                        <!-- BOOK INFORMATION -->
+                                        <div class="home-book-info">
+
+                                            <h5 title="{{ book.title }}">
+                                                {{ book.title }}
+                                            </h5>
+
+                                            <p class="home-book-author">
+                                                {{ book.author|default:"Unknown Author" }}
+                                            </p>
+
+                                            {% if book.active_loan_count == 0 %}
+                                                <span class="home-book-status available">
+                                                    Available
+                                                </span>
+                                            {% else %}
+                                                <span class="home-book-status unavailable">
+                                                    Borrowed
+                                                </span>
+                                            {% endif %}
+
+                                        </div>
+
+                                    {% if book.active_loan_count == 0 %}
+                                        </a>
+                                    {% else %}
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+
+                            {% empty %}
+                                <p class="text-muted small">
+                                    No books in this category.
+                                </p>
+                            {% endfor %}
+
+                        </div>
+                    </section>
+
+                {% empty %}
+
+                    <div class="book-empty">
+                        <span>📚</span>
+                        <h4>No Books Available</h4>
+                        <p>There are currently no books in the library collection.</p>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+            <!-- NO SEARCH RESULTS -->
+            <div id="homeNoResults" class="book-empty" style="display:none;">
+                <span>🔍</span>
+                <h4>No Matching Books</h4>
+                <p>Try another category or search keyword.</p>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+
+<style>
+
+/* MAIN CONTENT */
+.member-content {
+    min-width: 0;
+}
+
+.home-welcome h2 {
+    margin-bottom: 5px;
+    font-size: 25px;
+}
+
+.home-welcome p {
+    margin-bottom: 15px;
+    color: #777;
+}
+
+.book-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.book-section-header h3 {
+    font-size: 21px;
+    margin-bottom: 3px;
+}
+
+.book-section-header p {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+}
+
+.book-total {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* FILTERS */
+.home-book-filters {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.filter-field {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.filter-field .form-control,
+.filter-field .form-select {
+    font-size: 13px;
+    padding: 8px 10px;
+}
+
+.home-book-filters button {
+    font-size: 13px;
+    padding: 8px 14px;
+}
+
+/* CATEGORY SECTION */
+.home-category-section {
+    margin-top: 17px;
+}
+
+.home-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.home-category-header h4 {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.home-view-all {
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #0d6efd;
+}
+
+.home-view-all:hover {
+    text-decoration: underline;
+}
+
+/* FIVE BOOKS PER ROW */
+.home-books-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+/* BOOK CARD */
+.home-book-card {
+    min-width: 0;
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 9px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.home-book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.09);
+}
+
+.home-book-link {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+}
+
+.home-book-link:hover {
+    color: inherit;
+}
+
+/* BOOK COVER */
+.home-book-cover {
+    width: 100%;
+    height: 145px;
+    background: #f3f3f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.home-book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.home-no-cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    color: #999;
+    font-size: 25px;
+}
+
+.home-no-cover span {
+    font-size: 11px;
+}
+
+/* BOOK INFORMATION */
+.home-book-info {
+    padding: 8px;
+}
+
+.home-book-info h5 {
+    font-size: 12px;
+    font-weight: 700;
+    margin: 0 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-book-author {
+    font-size: 11px;
+    color: #777;
+    margin: 0 0 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-book-status {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.home-book-status.available {
+    background: #e6f5eb;
+    color: #198754;
+}
+
+.home-book-status.unavailable {
+    background: #fce8e8;
+    color: #dc3545;
+}
+
+/* EMPTY RESULT */
+.book-empty {
+    text-align: center;
+    padding: 35px 15px;
+}
+
+.book-empty span {
+    font-size: 35px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1100px) {
+    .home-books-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .home-books-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .home-book-cover {
+        height: 125px;
+    }
+}
+
+@media (max-width: 480px) {
+    .home-books-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+</style>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const categorySelect = document.getElementById('homeCategory');
+    const searchInput = document.getElementById('homeSearch');
+    const resetButton = document.getElementById('homeReset');
+    const resultCount = document.getElementById('homeResultCount');
+    const noResults = document.getElementById('homeNoResults');
+
+    const cards = Array.from(
+        document.querySelectorAll('.home-book-card')
+    );
+
+    const sections = Array.from(
+        document.querySelectorAll('.home-category-section')
+    );
+
+    function filterBooks() {
+
+        const selectedCategory = categorySelect.value;
+        const keyword = searchInput.value.trim().toLowerCase();
+
+        let visibleCount = 0;
+
+        cards.forEach(function (card) {
+
+            const cardCategory = card.dataset.category;
+            const cardText = card.dataset.search.toLowerCase();
+
+            const categoryMatch =
+                selectedCategory === 'all' ||
+                selectedCategory === cardCategory;
+
+            const searchMatch =
+                keyword === '' || cardText.includes(keyword);
+
+            const visible = categoryMatch && searchMatch;
+
+            card.style.display = visible ? '' : 'none';
+
+            if (visible) {
+                visibleCount++;
+            }
+        });
+
+        sections.forEach(function (section) {
+
+            const visibleCards = section.querySelectorAll(
+                '.home-book-card:not([style*="display: none"])'
+            );
+
+            section.style.display =
+                visibleCards.length > 0 ? '' : 'none';
+        });
+
+        resultCount.textContent =
+            'Showing ' + visibleCount + ' books';
+
+        noResults.style.display =
+            visibleCount === 0 ? 'block' : 'none';
+    }
+
+    categorySelect.addEventListener('change', filterBooks);
+    searchInput.addEventListener('input', filterBooks);
+
+    resetButton.addEventListener('click', function () {
+        categorySelect.value = 'all';
+        searchInput.value = '';
+        filterBooks();
+    });
+
+    filterBooks();
+});
+</script>
+
+{% endblock %}

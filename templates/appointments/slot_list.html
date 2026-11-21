@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Time Slots · Library System{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 page-title mb-0"><i class="bi bi-clock me-2"></i>Manage Time Slots</h1>
+  <a class="btn btn-primary" href="{% url 'appointments:slot_add' %}"><i class="bi bi-plus-lg me-1"></i>Add Time Slot</a>
+</div>
+<ul class="nav nav-pills mb-3">
+  <li class="nav-item"><a class="nav-link {% if show == 'upcoming' %}active{% endif %}" href="?show=upcoming">Today &amp; upcoming</a></li>
+  <li class="nav-item"><a class="nav-link {% if show == 'past' %}active{% endif %}" href="?show=past">Past</a></li>
+  <li class="nav-item"><a class="nav-link {% if show == 'all' %}active{% endif %}" href="?show=all">All</a></li>
+</ul>
+<div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
+  <thead><tr><th>Date</th><th>Time</th><th style="min-width:160px">Booked</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+  {% for s in slots %}
+  <tr>
+    <td class="fw-semibold">{{ s.date|date:"D d M Y" }}</td>
+    <td>{{ s.start_time|time:"H:i" }} - {{ s.end_time|time:"H:i" }}{% if s.note %}<div class="small text-muted">{{ s.note }}</div>{% endif %}</td>
+    <td><div class="small">{{ s.booked }} / {{ s.capacity }}</div>
+      <div class="progress"><div class="progress-bar {% if s.booked >= s.capacity %}bg-danger{% endif %}" style="width: {% widthratio s.booked s.capacity 100 %}%"></div></div></td>
+    <td><span class="badge {% if s.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if s.is_active %}Open{% else %}Closed{% endif %}</span></td>
+    <td class="text-end"><div class="d-inline-flex gap-1 flex-wrap justify-content-end">
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'appointments:slot_edit' s.pk %}"><i class="bi bi-pencil"></i> Edit</a>
+      <form method="post" action="{% url 'appointments:slot_toggle' s.pk %}">{% csrf_token %}
+        <button class="btn btn-sm {% if s.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" type="submit">{% if s.is_active %}<i class="bi bi-lock"></i> Close{% else %}<i class="bi bi-unlock"></i> Reopen{% endif %}</button></form>
+      <a class="btn btn-sm btn-outline-danger" href="{% url 'appointments:slot_delete' s.pk %}"><i class="bi bi-trash"></i> Delete</a>
+    </div></td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="text-center text-muted py-4">No time slots found.</td></tr>{% endfor %}
+</table></div></div>
+{% endblock %}

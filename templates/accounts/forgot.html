@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Forgot password{% endblock %}
+{% block content %}
+<div class="card form-card mx-auto"><div class="card-body p-4">
+  <h1 class="h4 page-title">Password recovery</h1>
+  {% if done %}
+    <div class="alert alert-success"><i class="bi bi-envelope-check me-1"></i>If an active account matches, a reset link has been sent to its email address. The link is valid for 1 hour.</div>
+    {% if demo_link %}
+    <div class="alert alert-warning small"><strong>Demo mode</strong> (no mail server): open this link to reset the password.<br><a href="{{ demo_link }}" class="text-break">{{ demo_link }}</a></div>
+    {% endif %}
+    <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Back to login</a>
+  {% else %}
+    <p class="text-muted">Enter your username or email and we will send you a link to choose a new password.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% include 'includes/form_fields.html' %}
+      <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Send reset link</button>
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:login' %}">Cancel</a>
+    </form>
+  {% endif %}
+</div></div>
+{% endblock %}

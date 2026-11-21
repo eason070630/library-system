@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="card form-card mx-auto text-center"><div class="card-body py-5">
+  <i class="bi bi-shield-exclamation display-3 text-danger"></i>
+  <h1 class="h3 mt-3">Access denied</h1>
+  <p class="text-muted mb-1">Your role{% if current_role %} (<strong>{{ current_role }}</strong>){% endif %} does not have permission to open this page.</p>
+  {% if needed %}<p class="small text-muted">Required permission: <code>{{ needed }}</code></p>{% endif %}
+  <a class="btn btn-primary mt-2" href="{% url 'home' %}">Back to dashboard</a>
+</div></div>
+{% endblock %}
