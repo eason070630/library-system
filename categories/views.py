@@ -98,15 +98,32 @@ def books_by_category(request, pk):
 
 def book_add(request):
     """Add Book (helper page so books exist to assign to categories)."""
-    form = BookForm(request.POST if request.method == 'POST' else None)
+
     if request.method == 'POST':
+        form = BookForm(request.POST, request.FILES)
+
         if form.is_valid():
             book = form.save()
-            messages.success(request, f'Book "{book.title}" added successfully.')
+            messages.success(
+                request,
+                f'Book "{book.title}" added successfully.'
+            )
             return redirect('categories:book_add')
-        messages.error(request, 'Could not add book. Please correct the errors below.')
+
+        messages.error(
+            request,
+            'Could not add book. Please correct the errors below.'
+        )
+
+    else:
+        form = BookForm()
+
     recent = Book.objects.order_by('-pk')[:10]
-    return render(request, 'categories/book_form.html', {'form': form, 'recent': recent})
+
+    return render(request, 'categories/book_form.html', {
+        'form': form,
+        'recent': recent
+    })
 @login_required
 def member_browse_books(request):
     """Read-only book browsing page for logged-in members."""
