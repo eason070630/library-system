@@ -47,31 +47,52 @@ class AssignForm(BootstrapFormMixin, forms.Form):
 
 
 class BookForm(BootstrapFormMixin, forms.ModelForm):
-    """Helper form for adding books (not part of the graded function table)."""
+    """Form for adding and editing books."""
 
-    # Allow hyphens/spaces when typing; they are stripped in clean_isbn.
     isbn = forms.CharField(max_length=20, label='ISBN')
 
     class Meta:
         model = Book
-        fields = ['title', 'author', 'isbn', 'category', 'cover_image']
+        fields = [
+            'title',
+            'author',
+            'isbn',
+            'category',
+            'cover_image',
+        ]
 
     def clean_title(self):
         title = ' '.join(self.cleaned_data['title'].split())
         if len(title) < 2:
-            raise forms.ValidationError('Title must be at least 2 characters.')
+            raise forms.ValidationError(
+                'Title must be at least 2 characters.'
+            )
         return title
 
     def clean_author(self):
         author = ' '.join(self.cleaned_data['author'].split())
         if len(author) < 2:
-            raise forms.ValidationError('Author must be at least 2 characters.')
+            raise forms.ValidationError(
+                'Author must be at least 2 characters.'
+            )
         return author
 
     def clean_isbn(self):
         isbn = re.sub(r'[\s\-]', '', self.cleaned_data['isbn'])
+
         if not re.fullmatch(r'\d{10}|\d{13}', isbn):
-            raise forms.ValidationError('ISBN must be 10 or 13 digits.')
-        if Book.objects.filter(isbn=isbn).exists():
-            raise forms.ValidationError('A book with this ISBN already exists.')
+            raise forms.ValidationError(
+                'ISBN must be 10 or 13 digits.'
+            )
+
+        qs = Book.objects.filter(isbn=isbn)
+
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError(
+                'A book with this ISBN already exists.'
+            )
+
         return isbn

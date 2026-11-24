@@ -6,7 +6,8 @@ from django.views.decorators.http import require_POST
 from .models import Book
 from .forms import AssignForm, BookForm, CategoryForm
 from .models import Book, Category
-
+from django.db.models import Q
+from django.http import HttpResponse
 
 def category_list(request):
     categories = Category.objects.annotate(book_count=Count('books'))
@@ -131,4 +132,85 @@ def member_browse_books(request):
 
     return render(request, 'categories/member_books.html', {
         'books': books,
+    })
+def manage_books(request):
+    """Display and search all books."""
+
+    keyword = request.GET.get('q', '').strip()
+
+    books = Book.objects.select_related('category').order_by('title')
+
+    if keyword:
+        books = books.filter(
+            Q(title__icontains=keyword) |
+            Q(author__icontains=keyword) |
+            Q(isbn__icontains=keyword)
+        )
+
+    return render(request, 'categories/manage_books.html', {
+        'books': books,
+        'keyword': keyword,
+    })
+
+
+def book_edit(request, pk):
+    """Edit an existing book."""
+
+    book = get_object_or_404(Book, pk=pk)
+
+    if request.method == 'POST':
+        form = BookForm(
+            request.POST,
+            request.FILES,
+            instance=book
+        )
+
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f'Book "{book.title}" updated successfully.'
+            )
+            return redirect('categories:manage_books')
+
+        messages.error(
+            request,
+            'Could not update book. Please correct the errors.'
+        )
+
+    else:
+        form = BookForm(instance=book)
+
+    return render(request, 'categories/book_edit.html', {
+        'form': form,
+        'book': book,
+    })
+
+
+def book_delete(request, pk):
+    """Delete a book after confirmation."""
+
+    book = get_object_or_404(Book, pk=pk)
+
+    if request.method == 'POST':
+        title = book.title
+
+        try:
+            book.delete()
+        except Exception:
+            messages.error(
+                request,
+                'This book cannot be deleted because it may be linked '
+                'to borrowing records or other data.'
+            )
+            return redirect('categories:manage_books')
+
+        messages.success(
+            request,
+            f'Book "{title}" deleted successfully.'
+        )
+        return redirect('categories:manage_books')
+
+    return render(request, 'categories/book_confirm_delete.html', {
+        'book': book,
     })
