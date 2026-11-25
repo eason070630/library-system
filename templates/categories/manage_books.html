@@ -58,14 +58,14 @@
                     <td>
                         {% if book.cover_image %}
                             <img src="{{ book.cover_image.url }}"
-                                 alt="{{ book.title }}"
-                                 style="height:65px;max-width:50px;object-fit:contain;">
+                                alt="{{ book.title }}"
+                                style="width: 70px; height: 90px; object-fit: cover;">
                         {% elif book.cover %}
                             <img src="{{ book.cover.url }}"
-                                 alt="{{ book.title }}"
-                                 style="height:65px;max-width:50px;object-fit:contain;">
+                                alt="{{ book.title }}"
+                                style="width: 70px; height: 90px; object-fit: cover;">
                         {% else %}
-                            <i class="bi bi-book text-muted fs-3"></i>
+                            <span>No Cover</span>
                         {% endif %}
                     </td>
 
