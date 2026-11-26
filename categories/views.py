@@ -8,7 +8,9 @@ from .forms import AssignForm, BookForm, CategoryForm
 from .models import Book, Category
 from django.db.models import Q
 from django.http import HttpResponse
+import logging
 
+logger = logging.getLogger(__name__)
 def category_list(request):
     categories = Category.objects.annotate(book_count=Count('books'))
     return render(request, 'categories/list.html', {'categories': categories})
@@ -166,17 +168,37 @@ def book_edit(request, pk):
         )
 
         if form.is_valid():
-            form.save()
-            messages.success(
-                request,
-                f'Book "{book.title}" updated successfully.'
-            )
-            return redirect('categories:manage_books')
+            try:
+                form.save()
 
-        messages.error(
-            request,
-            'Could not update book. Please correct the errors.'
-        )
+                messages.success(
+                    request,
+                    f'Book "{book.title}" updated successfully.'
+                )
+                return redirect('categories:manage_books')
+
+            except Exception:
+                logger.exception(
+                    "Book cover or book update failed. Book ID: %s",
+                    pk
+                )
+
+                messages.error(
+                    request,
+                    'Could not update book. Please check the server logs.'
+                )
+
+        else:
+            logger.warning(
+                "Book edit form invalid. Book ID: %s. Errors: %s",
+                pk,
+                form.errors
+            )
+
+            messages.error(
+                request,
+                'Could not update book. Please correct the errors.'
+            )
 
     else:
         form = BookForm(instance=book)
