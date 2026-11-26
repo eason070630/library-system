@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     "accounts",
     "appointments",
     "borrowing",
+    "cloudinary_storage",
+    "cloudinary",
 ]
 
 MIDDLEWARE = [
@@ -179,7 +181,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
@@ -200,7 +202,6 @@ MAILERS = {
     },
 }
 
-STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Map Django message levels to Bootstrap alert colours
 from django.contrib.messages import constants as message_constants
@@ -214,3 +215,10 @@ PASSWORD_RESET_TIMEOUT = 3600  # password-recovery links expire after 1 hour
 # No SMTP server in a student project: recovery e-mails go to the console (MAILERS above).
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+# Cloudinary configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+}
